@@ -12,6 +12,8 @@ works with 2 datetime columns to keep FROM DATE and TO DATE information of each
 change. These tables can be used for implementing Slowly Changing Dimension
 without complex ETL implementation.
 
+The following is a Temporal tables implementation using luigi and SqlAlchemy.
+
 """
 
 import datetime
