@@ -221,8 +221,8 @@ class TemporalTable(sqla.CopyToTable):
     def rows(self, skiprows=1):
         """Return/yield tuples or lists corresponding to each input row.
 
-        This is an override of the `luigi.contrib.sqla.CopyToTable()` with the
-        addiction of `skiprows` parameter.
+        This is an override of the `luigi.contrib.sqla.CopyToTable.rows()`
+        that uses SQLAlchemyTarget instead of LocalTarget inputs.
 
         """
 
