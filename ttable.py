@@ -12,8 +12,6 @@ works with 2 datetime columns to keep FROM DATE and TO DATE information of each
 change. These tables can be used for implementing Slowly Changing Dimension
 without complex ETL implementation.
 
-The following is a Temporal tables implementation using luigi and SqlAlchemy.
-
 """
 
 import datetime
@@ -227,11 +225,19 @@ class TemporalTable(sqla.CopyToTable):
         addiction of `skiprows` parameter.
 
         """
-        with self.input().open('r') as fobj:
-            for row in range(skiprows):
-                line = fobj.readline()
-            for line in fobj:
-                yield line.strip('\n').split(self.column_separator)
+
+        with self.input().engine.begin() as con:
+            metadata = sqlalchemy.MetaData()
+            engine = self.input().engine
+            table = self.input().target_table
+            table_bound = sqlalchemy.Table(table,
+                                           metadata,
+                                           autoload=True,
+                                           autoload_with=engine)
+
+            result = con.execute(table_bound.select())
+            for row in result:
+                yield row
 
     def run(self):
         """Lookup and insert/update a version of a temporal table row.
@@ -245,7 +251,7 @@ class TemporalTable(sqla.CopyToTable):
 
         with engine.begin() as conn:
             self._prefill_cache(conn)
-            rows = iter(self.rows())
+            rows = self.rows()
             all_rows = [dict(zip((c.key for c in self.table_bound.c
                                   if c.key not in ['id',
                                                    'SysStartDate',
