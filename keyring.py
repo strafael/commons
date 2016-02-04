@@ -38,9 +38,14 @@ from Crypto.Hash import SHA256
 from base64 import b64encode, b64decode
 
 
-def encrypt(key, data):
+def _make_key(key):
     key = '{}@{}@{}'.format(key, platform.node(), os.getlogin())
     key = SHA256.new(key.encode('utf-8')).digest()
+    return key
+
+
+def encrypt(key, data):
+    key = _make_key(key)
 
     iv = Random.get_random_bytes(AES.block_size)
     aes = AES.new(key, AES.MODE_CFB, iv)
@@ -50,8 +55,7 @@ def encrypt(key, data):
 
 
 def decrypt(key, data):
-    key = '{}@{}@{}'.format(key, platform.node(), os.getlogin())
-    key = SHA256.new(key.encode('utf-8')).digest()
+    key = _make_key(key)
 
     iv = b64decode(data[:24])
     crypted = b64decode(data[24:])
