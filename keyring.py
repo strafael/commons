@@ -38,8 +38,8 @@ from Crypto.Hash import SHA256
 from base64 import b64encode, b64decode
 
 
-def _make_key(key):
-    key = '{}@{}@{}'.format(key, platform.node(), os.getlogin())
+def _make_key(password):
+    key = '{}@{}@{}'.format(password, platform.node(), os.getlogin())
     key = SHA256.new(key.encode('utf-8')).digest()
     return key
 
