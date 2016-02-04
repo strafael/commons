@@ -44,8 +44,8 @@ def _make_key(password):
     return key
 
 
-def encrypt(key, data):
-    key = _make_key(key)
+def encrypt(password, data):
+    key = _make_key(password)
 
     iv = Random.get_random_bytes(AES.block_size)
     aes = AES.new(key, AES.MODE_CFB, iv)
@@ -54,8 +54,8 @@ def encrypt(key, data):
     return crypted
 
 
-def decrypt(key, data):
-    key = _make_key(key)
+def decrypt(password, data):
+    key = _make_key(password)
 
     iv = b64decode(data[:24])
     crypted = b64decode(data[24:])
