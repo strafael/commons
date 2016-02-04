@@ -40,19 +40,16 @@ from base64 import b64encode, b64decode
 
 def encrypt(key, data):
     key = '{}@{}@{}'.format(key, platform.node(), os.getlogin())
-    print(key)
     key = hashlib.sha256(key.encode('utf-8')).digest()
 
     iv = Random.get_random_bytes(AES.block_size)
     aes = AES.new(key, AES.MODE_CFB, iv)
     crypted =  b64encode(iv) + b64encode(aes.encrypt(data))
-
     return crypted
 
 
 def decrypt(key, data):
     key = '{}@{}@{}'.format(key, platform.node(), os.getlogin())
-    
     key = hashlib.sha256(key.encode('utf-8')).digest()
 
     iv = b64decode(data[:24])
