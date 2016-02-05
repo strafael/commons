@@ -166,8 +166,14 @@ class KeyChain(object):
 
 if __name__ == '__main__' :
     kc = KeyChain('passwords.txt', password='123')
-    print('Loaded keychain: {}'.format(kc.list()))
-    print(kc._entries)
-    kc.set('SAP', username='John', password='user password')
-    kc.set('SAP', anotherinfo='more info to this entry', language='en')
+    print('Loaded keychain: {}'.format(kc.list))
+
+    kc.set('SAP', username='John', password='John123')
+    kc.set('imap', user='John', password='')
+    print(kc.list)
+    print(kc['SAP'])
+
+    kc.set('SAP', language='en')
+    print(kc['SAP'])
+
     kc.save()
