@@ -49,6 +49,10 @@ class KeyChain(object):
     Examples:
         >>> kc = KeyChain('passwords.txt', password='master password')
         >>> kc.set('SAP', username='John', password='John123')
+        >>> kc.set('imap', user='John', password='')
+        >>> kc.list
+        ['SAP', 'imap']
+        
         >>> kc['SAP']
         {'username': 'John', 'password': 'user password'}
 
