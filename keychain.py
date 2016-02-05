@@ -53,10 +53,10 @@ class KeyChain(object):
         {'username': 'John', 'password': 'user password'}
 
         >>> kc.set('SAP', language='en')
+        >>> kc['SAP']
         {'username': 'John', 'password': 'user password', 'language': 'en'}
 
         >>> kc.save()
-
         >>> with open('passwords.txt', 'r') as fp:
         >>>     print(fp.read())
         gV2RTYWO31hb8bR/hD3KmhJHQ8Us36DC
