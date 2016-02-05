@@ -30,9 +30,9 @@ The database is encrypted using AES encryption algorithm.
 
 """
 
-import base64
 import json
 import getpass
+import binascii
 from Crypto import Random
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
@@ -50,9 +50,6 @@ class KeyChain(object):
         >>> kc = KeyChain('passwords.txt', password='master password')
         >>> kc.set('SAP', username='John', password='John123')
         >>> kc.set('imap', user='John', password='')
-        >>> kc.list
-        ['SAP', 'imap']
-        
         >>> kc['SAP']
         {'username': 'John', 'password': 'user password'}
 
@@ -63,12 +60,11 @@ class KeyChain(object):
         >>> kc.save()
         >>> with open('passwords.txt', 'r') as fp:
         >>>     print(fp.read())
-        gV2RTYWO31hb8bR/hD3KmhJHQ8Us36DC
-        9p9u0jbViNd/bPWnB9vZjr0v/YpdnS8M
-        JFxL97DUkZE2ZDEtj/WuxEFkfclv8bea
-        6HsWHK8pqT/yBaNvQjHBvqMCewSlZ4sW
-        fIbgnxAgNGdXp3RMZmE6ehmxx6SZMNVB
-        CcUBH/6fGaSTHBiArqs=
+        3b9b 038e d5a0 d129 03ca 5eb7 d024 ccc6
+        b37e 28c3 2b7e 5ebf ebb3 82a9 b46a 6749
+        a41e d1a1 ddb7 b7d0 a398 5d91 f80e 6ec6
+        4b87 f0ed 7f17 31d5 b39b ca85 ae3b dc12
+        472e 8372 0116 ddca 35df ee0f 8d88 c96e
 
     """
     def __init__(self, path, password=None):
@@ -109,6 +105,7 @@ class KeyChain(object):
             self._entries[name] = data
         self.dirty = True
 
+    @property
     def list(self):
         """Returns all entry names currently stored in keychain"""
         return list(self._entries.keys())
@@ -119,15 +116,36 @@ class KeyChain(object):
             self._encryption_key = self._password_to_key(password)
 
         if self.dirty or password:
-            with open(self._path, 'w') as fp:
-                encrypted = self._encrypt()
-                fp.write(self._split_lines(encrypted))
+            encrypted = self._encrypt()
+            self._dump(encrypted)
 
     def _load(self):
         """Load an existing keychain database"""
+        import re
+
+        e = re.compile(r'\s+') # Matches all whitespace characters
         with open(self._path, 'r') as fp:
-            blob = ''.join(fp.read())
+            blob = e.sub('', fp.read())
             return self._decrypt(blob)
+
+    def _encrypt(self):
+        """Encrypt the keychain"""
+        data = json.dumps(self._entries).encode()
+        if not self._iv:
+            self._iv = Random.get_random_bytes(AES.block_size)
+        aes = AES.new(self._encryption_key, self._mode, self._iv)
+
+        return binascii.hexlify(self._iv + aes.encrypt(data)).decode()
+
+    def _decrypt(self, blob):
+        """Decrypt the keychain data"""
+        blob = binascii.unhexlify(blob.encode())
+        if not self._iv:
+            self._iv = blob[:AES.block_size]
+        aes = AES.new(self._encryption_key, self._mode, self._iv)
+        
+        data = aes.decrypt(blob[AES.block_size:]).decode()
+        return json.loads(data)
 
     def _password_to_key(self, password):
         """Converts a string password to a 32 bytes length key.
@@ -139,33 +157,45 @@ class KeyChain(object):
         """
         return SHA256.new(password.encode()).digest()
 
-    def _split_lines(self, string, every=32):
-        """Insert a new line every N characters"""
-        return '\n'.join(string[i:i+every]
-                         for i in range(0, len(string), every))
+    def _split_lines(self, string, space_every=4, newline_every=39):
+        """Align data inserting space and new line every N characters"""
+        string = ' '.join(string[i:i+space_every]
+                          for i in range(0, len(string), space_every))
+        string = '\n'.join(string[i:i+newline_every]
+                           for i in range(0, len(string), newline_every))
+        return string
 
-    def _encrypt(self):
-        """Encrypt the keychain"""
-        data = json.dumps(self._entries).encode()
-        if not self._iv:
-            self._iv = Random.get_random_bytes(AES.block_size)
-        aes = AES.new(self._encryption_key, self._mode, self._iv)
-
-        return base64.b64encode(self._iv + aes.encrypt(data)).decode()
-
-    def _decrypt(self, blob):
-        """Decrypt the keychain data"""
-        blob = base64.b64decode(blob.encode())
-        if not self._iv:
-            self._iv = blob[:AES.block_size]
-        aes = AES.new(self._encryption_key, self._mode, self._iv)
+    def _dump(self, string, block_width=4):
+        """Dump a string into a file grouped in blocks.
         
-        data = aes.decrypt(blob[AES.block_size:]).decode()
-        return json.loads(data)
+        Args:
+            string (str): String to be dumped.
+            block_width (Optional[int]) Block size.
+
+        """
+        with open(self._path, 'w') as fp:
+            for line in self._get_lines(string):
+                line = ' '.join(line[i:i+block_width]
+                                for i in range(0, len(line), block_width))
+                fp.write(line + '\n')
+
+    def _get_lines(self, string, width=32):
+        """Split a string in lines.
+        
+        Args:
+            string (str): String to be splitted.
+            width (Option[int]): Line length.
+
+        Returns:
+            Generator of lines with `width` length.
+
+        """
+        for i in range(0, len(string), width):
+            yield string[i:i+width]
 
 
 if __name__ == '__main__' :
-    kc = KeyChain('passwords.txt', password='123')
+    kc = KeyChain('.keychain', password='123')
     print('Loaded keychain: {}'.format(kc.list))
 
     kc.set('SAP', username='John', password='John123')
