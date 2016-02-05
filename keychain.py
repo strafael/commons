@@ -187,7 +187,7 @@ class KeyChain(object):
             width (Option[int]): Line length.
 
         Returns:
-            Generator of lines with `width` length.
+            Line generator with `width` length.
 
         """
         for i in range(0, len(string), width):
