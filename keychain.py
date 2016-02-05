@@ -24,8 +24,8 @@
 
 """KeyChain is a simple and convenient sensitive data manager.
 
-You can put any number of info into associated with an entry in the database,
-which is locked with one master key.
+You can put any number of info associated with an entry in the keychain,
+database, which is locked with one master key.
 The database is encrypted using AES encryption algorithm.
 
 """
