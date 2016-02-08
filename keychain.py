@@ -157,14 +157,6 @@ class KeyChain(object):
         """
         return SHA256.new(password.encode()).digest()
 
-    def _split_lines(self, string, space_every=4, newline_every=39):
-        """Align data inserting space and new line every N characters"""
-        string = ' '.join(string[i:i+space_every]
-                          for i in range(0, len(string), space_every))
-        string = '\n'.join(string[i:i+newline_every]
-                           for i in range(0, len(string), newline_every))
-        return string
-
     def _dump(self, string, block_width=4):
         """Dump a string into a file grouped in blocks.
         
