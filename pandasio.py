@@ -64,7 +64,7 @@ def to_sql(df, *args, **kwargs):
         w.start()
 
     # Enqueue jobs
-    for df_chunk in np.array_split(df.iloc[_initial_chunksize:, :],
+    for df_chunk in np.array_split(df.iloc[initial_chunksize:, :],
                                    num_workers):
         job_queue.put(Task(df_chunk, *args, **kwargs))
 
